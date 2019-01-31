@@ -3,9 +3,24 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>io.github.wordandahalf</groupId>
     <artifactId>Blueprint</artifactId>
     <version>0.0.1-DEV</version>
+    <packaging>jar</packaging>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/wordandahalf/Blueprint</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.javassist</groupId>
@@ -13,6 +28,7 @@
             <version>3.24.1-GA</version>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -32,6 +48,12 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <archive>
+                        <manifestEntries>
+                            <Premain-Class>io.github.wordandahalf.blueprint.agent.BlueprintAgent</Premain-Class>
+                            <Main-Class>io.github.wordandahalf.blueprint.BlueprintTest</Main-Class>
+                        </manifestEntries>
+                    </archive>
                 </configuration>
                 <executions>
                     <execution>

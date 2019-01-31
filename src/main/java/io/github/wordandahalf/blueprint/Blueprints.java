@@ -5,18 +5,18 @@ import io.github.wordandahalf.blueprint.annotations.Plan;
 import io.github.wordandahalf.blueprint.annotations.PlanType;
 import io.github.wordandahalf.blueprint.exceptions.PlanParameterException;
 import io.github.wordandahalf.blueprint.exceptions.PlanSignatureException;
+import io.github.wordandahalf.blueprint.injection.InjectionHelper;
 import io.github.wordandahalf.blueprint.utils.LoggingUtil;
 import javassist.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 public class Blueprints {
     public static boolean DEBUG_ENABLED = true;
 
     private static ClassPool pool = ClassPool.getDefault();
-
-
 
     public static Class<?> add(Class<?> clazz, ClassLoader loader, String classpath) throws Exception {
         pool.appendClassPath(classpath);
@@ -43,7 +43,10 @@ public class Blueprints {
             }
         }
 
-        return loadModifiedClass(modifiedClass, loader);
+        if(DEBUG_ENABLED)
+            LoggingUtil.getLogger().fine("Loading modified class '" + modifiedClass.getName() + "'");
+
+        return modifiedClass.toClass(loader, null);
     }
 
     public static Class<?> add(Class<?> clazz) throws Exception {
@@ -51,22 +54,11 @@ public class Blueprints {
     }
 
     private static boolean checkParameters(CtMethod a, CtMethod b) throws Exception {
-        if(a.getParameterTypes().length != b.getParameterTypes().length)
-            return false;
+       if ((a.getParameterTypes().length == b.getParameterTypes().length)
+               && Arrays.equals(a.getParameterTypes(), b.getParameterTypes()))
+                return true;
 
-        for(int i = 0; i < a.getParameterTypes().length; i++)
-            if(!(a.getParameterTypes()[i].getName()
-                    .equals(b.getParameterTypes()[i].getName())))
-                return false;
-
-        return true;
-    }
-
-    private static Class<?> loadModifiedClass(CtClass ctClass, ClassLoader loader) throws CannotCompileException  {
-        if(DEBUG_ENABLED)
-            LoggingUtil.getLogger().fine("Loading modified class '" + ctClass.getName() + "'");
-
-        return ctClass.toClass(loader, null);
+        return false;
     }
 
     private static CtClass handlePlan(Blueprint blueprint, Class<?> clazz, Plan plan, Method method) throws Exception {
@@ -93,60 +85,25 @@ public class Blueprints {
             LoggingUtil.getLogger().fine("Found source method '" + sourceCtMethod.getName() + "'");
         }
 
-        if(!checkParameters(targetCtMethod, sourceCtMethod))
-            throw new PlanParameterException(sourceCtMethod.getName(), targetCtMethod.getParameterTypes());
-
-        if(plan.type().equals(PlanType.OVERWRITE))
-            if(!targetCtMethod.getSignature().equals(sourceCtMethod.getSignature()))
-                throw new PlanSignatureException(plan, sourceCtMethod.getName(), targetCtMethod.getSignature());
-
-        String newMethodName = "blueprint$" + targetCtMethod.getName() + "_" + System.currentTimeMillis();
-        targetCtMethod.setName(newMethodName);
-
-        if(DEBUG_ENABLED && (targetCtMethod.getName().equals(newMethodName)))
-            LoggingUtil.getLogger().fine("Renamed target method '" + plan.method() + "' to '" + newMethodName + "'");
-
-        CtMethod newCtMethod = CtNewMethod.copy(sourceCtMethod, plan.method(), targetCtClass, null);
-
-        String newMethodCall = newMethodName + "(";
-
-        int numberOfParameters = targetCtMethod.getParameterTypes().length;
-
-        if(numberOfParameters > 0) {
-            for (int i = 0; i < numberOfParameters; i++) {
-                //$0 is the class instance
-                newMethodCall += "$" + (i + 1) + ",";
-            }
-
-            //To get rid of the trailing ','
-            newMethodCall = newMethodCall.substring(0, newMethodCall.length() - 1);
-        }
-
-        newMethodCall += ");";
-
         if(DEBUG_ENABLED)
-            LoggingUtil.getLogger().fine("Injecting call to '" + newMethodCall + "' into target method");
+            LoggingUtil.getLogger().fine("Performing injection with source method '" + sourceCtMethod.getName() +
+                                            "', target method '" + targetCtMethod.getName() + "' and target class '" + targetCtClass.getName() + "'");
 
         switch(plan.type()) {
             case INJECT_AFTER:
-                newCtMethod.insertBefore("{ " + newMethodCall + " }");
+                InjectionHelper.injectMethod(targetCtMethod, sourceCtMethod, InjectionHelper.InjectionLocation.INJECT_AFTER);
                 break;
             case INJECT_BEFORE:
-                newCtMethod.insertAfter("{ " + newMethodCall + " }");
+                InjectionHelper.injectMethod(targetCtMethod, sourceCtMethod, InjectionHelper.InjectionLocation.INJECT_BEFORE);
                 break;
             case OVERWRITE:
-                break;
+                InjectionHelper.overwriteMethod(targetCtMethod, sourceCtMethod);
             default:
                 break;
         }
 
         if(DEBUG_ENABLED)
-            LoggingUtil.getLogger().fine("Injected into method '" + newCtMethod.getName() + "'");
-
-        targetCtClass.addMethod(newCtMethod);
-
-        if(DEBUG_ENABLED)
-            LoggingUtil.getLogger().fine("Added method '" + newCtMethod.getName() + "' to class '" + targetCtClass.getName() + "'");
+            LoggingUtil.getLogger().fine("Finished injection.");
 
         return targetCtClass;
     }
