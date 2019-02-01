@@ -41,7 +41,7 @@ public class BlueprintTest {
         foo.getFoo();
     }
     
-    @Plan(method = "getFoo", type = PlanType.INJECT_AFTER)
+    @Inject(target = "getFoo", at = @At(location = "TAIL"))
     public void getFoo() {
         System.out.println("Hello, world!");
     }
