@@ -19,11 +19,11 @@ public class InjectionHelper {
      * is the same as the target method
      * @param targetMethod
      * @param sourceMethod
-     * @return
+     * @return The edited class for loading
      * @throws PlanSignatureException If the signature of the source method is not exactly the same as the target method
      * @throws CannotCompileException (This should never be thrown) If the source method's code cannot be compiled
      */
-    public static CtClass overwriteMethod(CtMethod targetMethod, CtMethod sourceMethod) throws PlanSignatureException, CannotCompileException {
+    public static CtClass overwriteMethod(CtMethod sourceMethod, CtMethod targetMethod) throws PlanSignatureException, CannotCompileException {
         if(!targetMethod.getSignature().equals(sourceMethod.getSignature()))
             throw new PlanSignatureException(targetMethod.getName(), targetMethod.getSignature());
 
@@ -50,10 +50,10 @@ public class InjectionHelper {
      * @param targetMethod The method to "inject" into
      * @param sourceMethod The method to inject
      * @param location Where the code should be injected in relation to the original function
-     * @return
+     * @return The edited class for loading
      * @throws CannotCompileException
      */
-    public static CtClass injectMethod(CtMethod targetMethod, CtMethod sourceMethod, InjectionLocation location) throws PlanSignatureException, CannotCompileException, NotFoundException {
+    public static CtClass injectMethod(CtMethod sourceMethod, CtMethod targetMethod, InjectionLocation location) throws PlanSignatureException, CannotCompileException, NotFoundException {
         if(!targetMethod.getSignature().equals(sourceMethod.getSignature()))
             throw new PlanSignatureException(targetMethod.getName(), targetMethod.getSignature());
 
