@@ -8,6 +8,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface At {
+    String  HEAD = "HEAD",
+            TAIL = "TAIL",
+            BEFORE_RETURN = "BEFORE_RETURN",
+            INVOCATION = "INVOCATION";
+
     /**
      * The location for a provided injection
      * Current supported locations include:

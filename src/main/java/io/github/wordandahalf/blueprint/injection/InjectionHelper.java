@@ -1,7 +1,15 @@
 package io.github.wordandahalf.blueprint.injection;
 
-import io.github.wordandahalf.blueprint.exceptions.PlanSignatureException;
+import io.github.wordandahalf.blueprint.Blueprints;
+import io.github.wordandahalf.blueprint.exceptions.InvalidInjectException;
+import io.github.wordandahalf.blueprint.utils.LoggingUtil;
 import javassist.*;
+import javassist.bytecode.*;
+import sun.rmi.runtime.Log;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class InjectionHelper {
     /**
@@ -20,13 +28,9 @@ public class InjectionHelper {
      * @param targetMethod
      * @param sourceMethod
      * @return The edited class for loading
-     * @throws PlanSignatureException If the signature of the source method is not exactly the same as the target method
      * @throws CannotCompileException (This should never be thrown) If the source method's code cannot be compiled
      */
-    public static CtClass overwriteMethod(CtMethod sourceMethod, CtMethod targetMethod) throws PlanSignatureException, CannotCompileException {
-        if(!targetMethod.getSignature().equals(sourceMethod.getSignature()))
-            throw new PlanSignatureException(targetMethod.getName(), targetMethod.getSignature());
-
+    public static CtClass overwriteMethod(CtMethod sourceMethod, CtMethod targetMethod) throws CannotCompileException {
         CtClass targetClass = targetMethod.getDeclaringClass();
 
         //Generate a new unique method name
@@ -43,60 +47,45 @@ public class InjectionHelper {
         return targetClass;
     }
 
-    /**
-     * Injects code into an existing method
-     * To be more specific, this renames the targeted method to a unique name,
-     * copies the source method to the target method's class and renames it, and then injects a call to the renamed method in it.
-     * @param targetMethod The method to "inject" into
-     * @param sourceMethod The method to inject
-     * @param location Where the code should be injected in relation to the original function
-     * @return The edited class for loading
-     * @throws CannotCompileException
-     */
-    public static CtClass injectMethod(CtMethod sourceMethod, CtMethod targetMethod, InjectionLocation location) throws PlanSignatureException, CannotCompileException, NotFoundException {
-        if(!targetMethod.getSignature().equals(sourceMethod.getSignature()))
-            throw new PlanSignatureException(targetMethod.getName(), targetMethod.getSignature());
+    private static boolean validateInjectionMethod(CtMethod sourceMethod, CtMethod targetMethod) throws NotFoundException {
+        // Rule 1
+        if(!Modifier.isPrivate(sourceMethod.getModifiers())
+            || !sourceMethod.getReturnType().getName().equals(CtClass.voidType.getName())) {
+            return false;
+        }
+
+        // Rule 2
+        if((Modifier.isStatic(targetMethod.getModifiers()) && !Modifier.isStatic(sourceMethod.getModifiers()))
+            || (!Modifier.isStatic(targetMethod.getModifiers()) && (Modifier.isStatic(sourceMethod.getModifiers())))) {
+            return false;
+        }
+
+        //Rule 3
+        if(!Arrays.equals(sourceMethod.getParameterTypes(), targetMethod.getParameterTypes())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static CtClass injectMethod(CtMethod sourceMethod, CtMethod targetMethod, InjectionLocation location) throws NotFoundException, InvalidInjectException, DuplicateMemberException, BadBytecode {
+        if(!validateInjectionMethod(sourceMethod, targetMethod))
+            throw new InvalidInjectException(sourceMethod, targetMethod);
 
         CtClass targetClass = targetMethod.getDeclaringClass();
 
-        //Generate a new unique method name
-        String newTargetMethodName = "blueprint$" + targetMethod.getName() + "_" + System.currentTimeMillis();
-
-        //Add the source method to the target class, ensuring it has the same name as the target method
-        CtMethod injectedMethod = CtNewMethod.copy(sourceMethod, targetMethod.getName(),
-                                            targetClass, null);
-
-        targetMethod.setName(newTargetMethodName);
-
-        String targetMethodCall = newTargetMethodName + "(";
-
-        int numberOfParameters = targetMethod.getParameterTypes().length;
-
-        if(numberOfParameters > 0) {
-            for (int i = 0; i < numberOfParameters; i++) {
-                //$0 is the class instance (the 'this' keyword) -- we don't want that
-                targetMethodCall += "$" + (i + 1) + ",";
-            }
-
-            //To get rid of the trailing ','
-            targetMethodCall = targetMethodCall.substring(0, targetMethodCall.length() - 1);
-        }
-
-        //Add the closing parentheses and semicolon
-        targetMethodCall += ");";
+        MethodInfo targetInfo = targetMethod.getMethodInfo();
 
         switch(location) {
-            case INJECT_BEFORE:
-                injectedMethod.insertAfter(targetMethodCall);
-                break;
             case INJECT_AFTER:
-                injectedMethod.insertBefore(targetMethodCall);
+                targetInfo.setCodeAttribute(BytecodeHelper.inject(sourceMethod.getMethodInfo(), targetInfo, targetInfo.getCodeAttribute().getCodeLength() - 1).toCodeAttribute());
+                break;
+            case INJECT_BEFORE:
+                targetInfo.setCodeAttribute(BytecodeHelper.inject(sourceMethod.getMethodInfo(), targetInfo, 0).toCodeAttribute());
                 break;
             default:
                 break;
         }
-
-        targetClass.addMethod(injectedMethod);
 
         return targetClass;
     }

@@ -1,10 +1,12 @@
 package io.github.wordandahalf.blueprint.annotations;
 
 import io.github.wordandahalf.blueprint.Blueprints;
-import io.github.wordandahalf.blueprint.exceptions.PlanSignatureException;
+import io.github.wordandahalf.blueprint.exceptions.InvalidInjectException;
 import io.github.wordandahalf.blueprint.injection.InjectionHelper;
 import io.github.wordandahalf.blueprint.utils.LoggingUtil;
 import javassist.*;
+import javassist.bytecode.BadBytecode;
+import javassist.bytecode.DuplicateMemberException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -27,7 +29,7 @@ public class BlueprintAnnotationProcessor {
      * @param target The fully-qualified name of the target class
      * @return The edited class for loading
      */
-    public static CtClass handleAnnotation(Annotation annotation, Method source, String target) throws NotFoundException, PlanSignatureException, CannotCompileException {
+    public static CtClass handleAnnotation(Annotation annotation, Method source, String target) throws NotFoundException, CannotCompileException, InvalidInjectException, BadBytecode {
         if(annotation instanceof Inject) {
             return handleInject((Inject) annotation, source, target);
         }
@@ -38,7 +40,7 @@ public class BlueprintAnnotationProcessor {
         return null;
     }
 
-    private static CtClass handleInject(Inject inject, Method source, String target) throws NotFoundException, PlanSignatureException, CannotCompileException {
+    private static CtClass handleInject(Inject inject, Method source, String target) throws NotFoundException, InvalidInjectException, DuplicateMemberException, BadBytecode {
         if(Blueprints.DEBUG_ENABLED)
             LoggingUtil.getLogger().fine("Processing Inject annotation...");
 
@@ -70,7 +72,7 @@ public class BlueprintAnnotationProcessor {
         return editedClass;
     }
 
-    private static CtClass handleOverwrite(Overwrite overwrite, Method source, String target) throws NotFoundException, PlanSignatureException, CannotCompileException {
+    private static CtClass handleOverwrite(Overwrite overwrite, Method source, String target) throws NotFoundException, CannotCompileException {
         if(Blueprints.DEBUG_ENABLED)
             LoggingUtil.getLogger().fine("Processing Overwrite annotation...");
 
