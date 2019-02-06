@@ -6,7 +6,6 @@ import io.github.wordandahalf.blueprint.injection.InjectionHelper;
 import io.github.wordandahalf.blueprint.utils.LoggingUtil;
 import javassist.*;
 import javassist.bytecode.BadBytecode;
-import javassist.bytecode.DuplicateMemberException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -40,7 +39,7 @@ public class BlueprintAnnotationProcessor {
         return null;
     }
 
-    private static CtClass handleInject(Inject inject, Method source, String target) throws NotFoundException, InvalidInjectException, DuplicateMemberException, BadBytecode {
+    private static CtClass handleInject(Inject inject, Method source, String target) throws NotFoundException, InvalidInjectException, CannotCompileException {
         if(Blueprints.DEBUG_ENABLED)
             LoggingUtil.getLogger().fine("Processing Inject annotation...");
 
@@ -72,7 +71,7 @@ public class BlueprintAnnotationProcessor {
         return editedClass;
     }
 
-    private static CtClass handleOverwrite(Overwrite overwrite, Method source, String target) throws NotFoundException, CannotCompileException {
+    private static CtClass handleOverwrite(Overwrite overwrite, Method source, String target) throws NotFoundException, InvalidInjectException, CannotCompileException {
         if(Blueprints.DEBUG_ENABLED)
             LoggingUtil.getLogger().fine("Processing Overwrite annotation...");
 

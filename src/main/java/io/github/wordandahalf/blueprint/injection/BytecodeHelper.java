@@ -82,15 +82,14 @@ public class BytecodeHelper {
         byte[] sourceCode = source.getCodeAttribute().getCode();
         byte[] targetCode = target.getCodeAttribute().getCode();
 
-        byte[] injectCode = insertCode(updateConstPoolRefs(sourceCode, updatedConstPool.right), targetCode, index);
+        byte[] injectCode = insertCode(
+                updateConstPoolRefs(sourceCode, updatedConstPool.right),
+                targetCode,
+                index
+        );
 
         for(byte b : injectCode) {
             inject.add(b);
-        }
-
-        if(Blueprints.DEBUG_ENABLED) {
-            LoggingUtil.getLogger().fine("Final bytecode: ");
-            dumpBytecode(injectCode);
         }
 
         return inject;

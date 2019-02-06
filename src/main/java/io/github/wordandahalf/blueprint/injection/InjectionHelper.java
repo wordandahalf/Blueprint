@@ -17,7 +17,7 @@ public class InjectionHelper {
      */
     public enum InjectionLocation  {
         INJECT_BEFORE(),
-        INJECT_AFTER();
+        INJECT_AFTER()
     }
 
     /**
@@ -30,19 +30,22 @@ public class InjectionHelper {
      * @return The edited class for loading
      * @throws CannotCompileException (This should never be thrown) If the source method's code cannot be compiled
      */
-    public static CtClass overwriteMethod(CtMethod sourceMethod, CtMethod targetMethod) throws CannotCompileException {
+    public static CtClass overwriteMethod(CtMethod sourceMethod, CtMethod targetMethod) throws NotFoundException, InvalidInjectException, CannotCompileException {
+        if(!validateInjectionMethod(sourceMethod, targetMethod))
+            throw new InvalidInjectException(sourceMethod, targetMethod);
+
         CtClass targetClass = targetMethod.getDeclaringClass();
 
-        //Generate a new unique method name
-        String newTargetMethodName = "blueprint$" + targetMethod.getName() + "_" + System.currentTimeMillis();
+        CtMethod overwrittenMethod = targetMethod;
 
-        //Add the source method to the target class, ensuring it has the same name as the target method
-        CtMethod injectedMethod = CtNewMethod.copy(sourceMethod, targetMethod.getName(),
-                targetClass, null);
+        MethodInfo sourceInfo = sourceMethod.getMethodInfo();
+        MethodInfo targetInfo = overwrittenMethod.getMethodInfo();
 
-        targetMethod.setName(newTargetMethodName);
+        targetClass.removeMethod(targetMethod);
 
-        targetClass.addMethod(injectedMethod);
+        targetInfo.setCodeAttribute(sourceInfo.getCodeAttribute());
+
+        targetClass.addMethod(overwrittenMethod);
 
         return targetClass;
     }
@@ -68,24 +71,42 @@ public class InjectionHelper {
         return true;
     }
 
-    public static CtClass injectMethod(CtMethod sourceMethod, CtMethod targetMethod, InjectionLocation location) throws NotFoundException, InvalidInjectException, DuplicateMemberException, BadBytecode {
+    public static CtClass injectMethod(CtMethod sourceMethod, CtMethod targetMethod, InjectionLocation location) throws NotFoundException, InvalidInjectException, CannotCompileException {
         if(!validateInjectionMethod(sourceMethod, targetMethod))
             throw new InvalidInjectException(sourceMethod, targetMethod);
 
         CtClass targetClass = targetMethod.getDeclaringClass();
 
-        MethodInfo targetInfo = targetMethod.getMethodInfo();
+        CtMethod injectedMethod = targetMethod;
+
+        MethodInfo sourceInfo = sourceMethod.getMethodInfo();
+        MethodInfo targetInfo = injectedMethod.getMethodInfo();
+
+        targetClass.removeMethod(targetMethod);
 
         switch(location) {
             case INJECT_AFTER:
-                targetInfo.setCodeAttribute(BytecodeHelper.inject(sourceMethod.getMethodInfo(), targetInfo, targetInfo.getCodeAttribute().getCodeLength() - 1).toCodeAttribute());
+                targetInfo.setCodeAttribute(
+                        BytecodeHelper.inject(
+                                sourceInfo,
+                                targetInfo,
+                                targetInfo.getCodeAttribute().getCodeLength() - 1
+                        ).toCodeAttribute()
+                );
                 break;
             case INJECT_BEFORE:
-                targetInfo.setCodeAttribute(BytecodeHelper.inject(sourceMethod.getMethodInfo(), targetInfo, 0).toCodeAttribute());
+                targetInfo.setCodeAttribute(
+                        BytecodeHelper.inject(
+                                sourceInfo,
+                                targetInfo, 0
+                        ).toCodeAttribute()
+                );
                 break;
             default:
                 break;
         }
+
+        targetClass.addMethod(injectedMethod);
 
         return targetClass;
     }
