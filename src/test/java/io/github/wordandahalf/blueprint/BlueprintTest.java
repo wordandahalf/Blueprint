@@ -12,7 +12,7 @@ public class BlueprintTest {
 
         Foo myFoo = new Foo();
         System.out.println(myFoo.getFoo());
-        myFoo.sayBar();
+        myFoo.sayBar(new String[] {"Hello, from String[]!"});
     }
 
     @Inject(target = "getFoo", at = @At(location = At.HEAD))
@@ -21,7 +21,7 @@ public class BlueprintTest {
     }
 
     @Overwrite(target = "sayBar")
-    private void sayBar() {
+    private void sayBar(String[] args) {
         System.out.println("Hello, from Overwrite!");
     }
 }

@@ -68,9 +68,9 @@ public class BytecodeHelper {
      * @param index The index in the bytecode to inject the target code into
      * @return
      */
-    public static Bytecode inject(MethodInfo source, MethodInfo target, int index) {
+    public static CodeAttribute inject(MethodInfo source, MethodInfo target, int index) {
         if(Blueprints.DEBUG_ENABLED)
-            LoggingUtil.getLogger().fine("Injecting source bytecode at index " + index);
+            LoggingUtil.getLogger().fine("Injecting source bytecode at index " + index + " and target bytecode at index " + (source.getCodeAttribute().getCodeLength() - 1));
 
         Pair<ConstPool, HashMap<Integer, Integer>> updatedConstPool =
                 combineConstPools(source.getConstPool(), target.getConstPool());
@@ -82,17 +82,31 @@ public class BytecodeHelper {
         byte[] sourceCode = source.getCodeAttribute().getCode();
         byte[] targetCode = target.getCodeAttribute().getCode();
 
-        byte[] injectCode = insertCode(
+        if(Blueprints.DEBUG_ENABLED) {
+            LoggingUtil.getLogger().fine("Target bytecode:");
+            dumpBytecode(targetCode);
+        }
+
+        byte[] injectCode = targetCode;/*insertCode(
                 updateConstPoolRefs(sourceCode, updatedConstPool.right),
                 targetCode,
                 index
-        );
+        );*/
+
+        if(Blueprints.DEBUG_ENABLED) {
+            LoggingUtil.getLogger().fine("Final bytecode:");
+            dumpBytecode(injectCode);
+        }
 
         for(byte b : injectCode) {
             inject.add(b);
         }
 
-        return inject;
+        CodeAttribute codeAttribute = inject.toCodeAttribute();
+
+        codeAttribute.setAttribute((StackMapTable) target.getCodeAttribute().getAttribute("StackMapTable"));
+
+        return codeAttribute;
     }
 
     private static byte[] insertCode(byte[] source, byte[] target, int index) {
@@ -101,6 +115,15 @@ public class BytecodeHelper {
         for(int i = 0; i < index; i++) {
             if((target[i] & 0xFF) == Opcode.RETURN)
                 continue;
+
+            if((target[i] & 0xFF) == Opcode.GOTO) {
+                int soffset = (target[i + 1] << 8) | (target[i + 2]);
+                int uoffset = (target[i+1]&0xFF << 8) + (target[i+2]&0xFF);
+
+                LoggingUtil.getLogger().fine("Found goto instruction with offset: "
+                        + soffset + "(" + uoffset + ")"
+                );
+            }
 
             code.add(target[i]);
         }
@@ -113,6 +136,15 @@ public class BytecodeHelper {
         }
 
         for(int i = index; i < target.length; i++) {
+            if((target[i] & 0xFF) == Opcode.GOTO) {
+                int soffset = (target[i + 1] << 8) + (target[i + 2]);
+                int uoffset = (target[i+1]&0xFF << 8) + (target[i+2]&0xFF);
+
+                LoggingUtil.getLogger().fine("Found goto instruction with offset: "
+                        + soffset + "(" + uoffset + ")"
+                );
+            }
+
             code.add(target[i]);
         }
 
@@ -151,9 +183,15 @@ public class BytecodeHelper {
 
     private static void dumpBytecode(byte[] bytecode) {
         for(int i = 0; i < bytecode.length; i++) {
-            LoggingUtil.getLogger().fine("[" + String.format("0x%04X", i) + "] "
-                    + Mnemonic.OPCODE[bytecode[i] & 0xFF]
-                    + "(" + String.format("0x%02X", bytecode[i]) + ")");
+            try {
+                LoggingUtil.getLogger().fine("[" + String.format("0x%04X", i) + "] "
+                        + Mnemonic.OPCODE[bytecode[i] & 0xFF]
+                        + "(" + String.format("0x%02X", bytecode[i]) + ")");
+            } catch(ArrayIndexOutOfBoundsException e) {
+                LoggingUtil.getLogger().fine("[" + String.format("0x%04X", i) + "] "
+                        + String.format("0x%02X", bytecode[i])
+                        + "(" + bytecode[i] + ")");
+            }
         }
     }
 }

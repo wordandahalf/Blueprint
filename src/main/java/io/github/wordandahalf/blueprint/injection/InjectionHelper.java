@@ -91,7 +91,7 @@ public class InjectionHelper {
                                 sourceInfo,
                                 targetInfo,
                                 targetInfo.getCodeAttribute().getCodeLength() - 1
-                        ).toCodeAttribute()
+                        )
                 );
                 break;
             case INJECT_BEFORE:
@@ -99,7 +99,7 @@ public class InjectionHelper {
                         BytecodeHelper.inject(
                                 sourceInfo,
                                 targetInfo, 0
-                        ).toCodeAttribute()
+                        )
                 );
                 break;
             default:

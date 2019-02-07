@@ -1,6 +1,11 @@
 package io.github.wordandahalf.blueprint.exceptions;
 
+import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.Modifier;
+import javassist.NotFoundException;
+
+import java.util.Arrays;
 
 public class InvalidInjectException extends Exception {
     private CtMethod sourceMethod, targetMethod;
@@ -10,9 +15,32 @@ public class InvalidInjectException extends Exception {
         this.targetMethod = targetMethod;
     }
 
+    private String getReason() throws NotFoundException {
+        if(!Modifier.isPrivate(sourceMethod.getModifiers()))
+            return "the source method is not private!";
+
+        if(!sourceMethod.getReturnType().getName().equals(CtClass.voidType.getName()))
+            return "the source method is not void!";
+
+        if(Modifier.isStatic(targetMethod.getModifiers()) && !Modifier.isStatic(sourceMethod.getModifiers()))
+            return "the source method is not static!";
+
+        if(!Modifier.isStatic(targetMethod.getModifiers()) && Modifier.isStatic(sourceMethod.getModifiers()))
+            return "the source method is not an instance method!";
+
+        if(!Arrays.equals(sourceMethod.getParameterTypes(), targetMethod.getParameterTypes()))
+            return "the source method does not have the same parameter types!";
+
+        return "404: Error message not found. Please report this to the Blueprint repository with adequate code snippets!";
+    }
+
     @Override
     public String getMessage() {
-        return "The BlueprintAnnotationProcessor encountered an unexpected error when parsing injection method '" +
-                sourceMethod.getLongName() + "' with the target '" + targetMethod.getLongName() + "'. Make sure that the injection method is a private, void, instance method with the same parameters as the target method.";
+        try {
+            return "The was an unexpected error when parsing injection method '" +
+                    sourceMethod.getLongName() + "' with the target '" + targetMethod.getLongName() + "' because " + getReason();
+        } catch(NotFoundException e) {
+            return "A NotFoundException was thrown when trying to generate an InvalidInjectException! Please report this to the Blueprint repository with adequate code snippets!";
+        }
     }
 }
