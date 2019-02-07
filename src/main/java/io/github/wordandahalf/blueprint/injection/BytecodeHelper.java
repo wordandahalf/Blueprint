@@ -1,8 +1,10 @@
 package io.github.wordandahalf.blueprint.injection;
 
 import io.github.wordandahalf.blueprint.Blueprints;
+import io.github.wordandahalf.blueprint.injection.bytecode.OpcodeUtils;
 import io.github.wordandahalf.blueprint.utils.LoggingUtil;
 import io.github.wordandahalf.blueprint.utils.Pair;
+
 import javassist.bytecode.*;
 
 import java.util.ArrayList;
@@ -35,14 +37,16 @@ public class BytecodeHelper {
      */
     public static byte[] updateConstPoolRefs(byte[] code, HashMap<Integer, Integer> updatedIndices) {
         for(int i = 0; i < code.length; i++) {
-            if(isOneByteConstPoolOpcode(code[i] & 0xFF)) {
+            if(OpcodeUtils.referencesConstPool(code[i] & 0xFF)
+            && OpcodeUtils.getNumberOfOperands(code[i] & 0xFF) == 1) {
                 int index = code[i + 1] & 0xFF;
                 int newIndex = updatedIndices.get(index);
 
                 code[i + 1] = (byte) (newIndex & 0x00FF);
             }
             else
-            if(isTwoByteConstPoolOpcode(code[i] & 0xFF)) {
+            if(OpcodeUtils.referencesConstPool(code[i] & 0xFF)
+                    && OpcodeUtils.getNumberOfOperands(code[i] & 0xFF) == 2) {
                 int index = ((code[i + 1] & 0xFF) << 8) + (code[i + 2] & 0xFF);
 
                 int newIndex;
@@ -87,11 +91,11 @@ public class BytecodeHelper {
             dumpBytecode(targetCode);
         }
 
-        byte[] injectCode = targetCode;/*insertCode(
+        byte[] injectCode = insertCode(
                 updateConstPoolRefs(sourceCode, updatedConstPool.right),
                 targetCode,
                 index
-        );*/
+        );
 
         if(Blueprints.DEBUG_ENABLED) {
             LoggingUtil.getLogger().fine("Final bytecode:");
@@ -158,35 +162,29 @@ public class BytecodeHelper {
         return codeArray;
     }
 
-    private static boolean isTwoByteConstPoolOpcode(int opcode) {
-        return opcode == Opcode.ANEWARRAY ||
-                opcode == Opcode.CHECKCAST ||
-                opcode == Opcode.GETFIELD ||
-                opcode == Opcode.GETSTATIC ||
-                opcode == Opcode.INSTANCEOF ||
-                opcode == Opcode.INVOKEDYNAMIC ||
-                opcode == Opcode.INVOKEINTERFACE ||
-                opcode == Opcode.INVOKESPECIAL ||
-                opcode == Opcode.INVOKESTATIC ||
-                opcode == Opcode.INVOKEVIRTUAL ||
-                opcode == Opcode.MULTIANEWARRAY ||
-                opcode == Opcode.NEW ||
-                opcode == Opcode.PUTFIELD ||
-                opcode == Opcode.PUTSTATIC;
-    }
-
-    private static boolean isOneByteConstPoolOpcode(int opcode) {
-        return opcode == Opcode.LDC ||
-                opcode == Opcode.LDC_W ||
-                opcode == Opcode.LDC2_W;
-    }
-
     private static void dumpBytecode(byte[] bytecode) {
         for(int i = 0; i < bytecode.length; i++) {
             try {
+                String operands = "";
+
+                int numberOfOperands = OpcodeUtils.getNumberOfOperands(bytecode[i] & 0xFF);
+
+                if(numberOfOperands > 0) {
+                    operands = "0x";
+
+                    for (int j = 0; j < numberOfOperands; j++) {
+                        operands += String.format("%02X", bytecode[i + j + 1]);
+                    }
+                }
+
                 LoggingUtil.getLogger().fine("[" + String.format("0x%04X", i) + "] "
                         + Mnemonic.OPCODE[bytecode[i] & 0xFF]
-                        + "(" + String.format("0x%02X", bytecode[i]) + ")");
+                        + " " + operands + "("
+                        + (OpcodeUtils.referencesConstPool(bytecode[i] & 0xFF) ? "P" : "")
+                        + (OpcodeUtils.referencesLocalVar(bytecode[i] & 0xFF) ? "V" : "")
+                        + (OpcodeUtils.isBranchInstruction(bytecode[i] & 0xFF) ? "B" : "") + ")");
+
+                i += numberOfOperands;
             } catch(ArrayIndexOutOfBoundsException e) {
                 LoggingUtil.getLogger().fine("[" + String.format("0x%04X", i) + "] "
                         + String.format("0x%02X", bytecode[i])
