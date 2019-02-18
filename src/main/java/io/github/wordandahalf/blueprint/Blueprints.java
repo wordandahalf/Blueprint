@@ -1,60 +1,51 @@
 package io.github.wordandahalf.blueprint;
 
-import io.github.wordandahalf.blueprint.annotations.Blueprint;
-import io.github.wordandahalf.blueprint.annotations.BlueprintAnnotationProcessor;
-import io.github.wordandahalf.blueprint.exceptions.InvalidInjectException;
-import io.github.wordandahalf.blueprint.utils.LoggingUtil;
+import io.github.wordandahalf.blueprint.annotation.Blueprint;
+import io.github.wordandahalf.blueprint.annotation.parsing.BlueprintAnnotationParser;
+import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
+import io.github.wordandahalf.blueprint.utils.Pair;
 import javassist.CannotCompileException;
-import javassist.ClassPool;
 import javassist.CtClass;
-import javassist.NotFoundException;
-import javassist.bytecode.BadBytecode;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 public class Blueprints {
-    public static boolean DEBUG_ENABLED = true;
+    private static BlueprintClassTransformerPool transformerPool;
+    private static BlueprintClassPool classPool;
 
-    /**
-     * Loads a Blueprint-annotated class
-     * @param clazz The class to load
-     * @throws NotFoundException If the targeted class could not be found
-     * @throws CannotCompileException If Javassist encounters an error when injecting.
-     */
-    public static void add(Class<?> clazz)  throws NotFoundException, CannotCompileException, InvalidInjectException, BadBytecode {
-        add(clazz, null, "");
-    }
-
-    /**
-     * Loads a Blueprint-annotated class
-     * @param clazz The class to load
-     * @throws NotFoundException If the targeted class could not be found
-     * @throws CannotCompileException If Javassist encounters an error when injecting.
-     */
-    public static void add(Class<?> clazz, ClassLoader loader, String classpath) throws NotFoundException, CannotCompileException, InvalidInjectException, BadBytecode {
-        ClassPool.getDefault().appendClassPath(classpath);
+    public static void add(Class<?> clazz) {
+        transformerPool = new BlueprintClassTransformerPool();
+        classPool = new BlueprintClassPool();
 
         Blueprint blueprint = clazz.getAnnotation(Blueprint.class);
 
         if(blueprint != null) {
-            if(DEBUG_ENABLED)
-                LoggingUtil.getLogger().fine("Found 'Blueprint' annotation on class '" + clazz.getSimpleName() + "'");
+            BlueprintAnnotationParser parser = new BlueprintAnnotationParser(clazz, blueprint);
 
-            CtClass editedClass = null;
+            parser.parse();
 
-            for(Method method : clazz.getDeclaredMethods()) {
-                for(Annotation annotation : method.getAnnotations()) {
-                    if(BlueprintAnnotationProcessor.isBlueprintAnnotation(annotation)) {
-                        if(DEBUG_ENABLED)
-                            LoggingUtil.getLogger().fine("Found '" + annotation.annotationType().getSimpleName() + "' on method '" + method.getName() + "'");
+            parser.getClassTransformers().forEach(transformer -> {
+                transformerPool.add(parser.getSourceClassName(), parser.getTargetClassName(), transformer);
+            });
+        }
+    }
 
-                        editedClass = BlueprintAnnotationProcessor.handleAnnotation(annotation, method, blueprint.target());
-                    }
-                }
+    public static void apply() throws Exception {
+        for(Pair<String, String> classPair : transformerPool.getClassPairs()) {
+            for(ClassTransformer transformer : transformerPool.getTransformerByPair(classPair)) {
+                    CtClass modifiedClass = transformer.apply(
+                            classPool.getClass(classPair.left),
+                            classPool.getClass(classPair.right)
+                    );
+
+                classPool.addModifiedClass(modifiedClass);
             }
+        }
 
-            editedClass.toClass(loader, null);
+        loadModifiedClasses();
+    }
+
+    private static void loadModifiedClasses() throws CannotCompileException {
+        for(CtClass clazz : classPool.getModifiedClasses()) {
+            clazz.toClass();
         }
     }
 }

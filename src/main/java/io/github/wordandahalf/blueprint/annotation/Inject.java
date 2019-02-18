@@ -1,4 +1,4 @@
-package io.github.wordandahalf.blueprint.annotations;
+package io.github.wordandahalf.blueprint.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

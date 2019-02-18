@@ -7,10 +7,10 @@ import javassist.NotFoundException;
 
 import java.util.Arrays;
 
-public class InvalidInjectException extends Exception {
+public class InvalidInjectionException extends Exception {
     private CtMethod sourceMethod, targetMethod;
 
-    public InvalidInjectException(CtMethod sourceMethod, CtMethod targetMethod) {
+    public InvalidInjectionException(CtMethod sourceMethod, CtMethod targetMethod) {
         this.sourceMethod = sourceMethod;
         this.targetMethod = targetMethod;
     }
@@ -37,7 +37,7 @@ public class InvalidInjectException extends Exception {
     @Override
     public String getMessage() {
         try {
-            return "The was an unexpected error when parsing injection method '" +
+            return "The was an error when parsing injection method '" +
                     sourceMethod.getLongName() + "' with the target '" + targetMethod.getLongName() + "' because " + getReason();
         } catch(NotFoundException e) {
             return "A NotFoundException was thrown when trying to generate an InvalidInjectException! Please report this to the Blueprint repository with adequate code snippets!";
