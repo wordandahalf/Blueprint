@@ -1,5 +1,6 @@
 package io.github.wordandahalf.blueprint.bytecode;
 
+import io.github.wordandahalf.blueprint.utils.IntegerUtils;
 import javassist.bytecode.ConstPool;
 
 import java.util.ArrayList;
@@ -7,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BlueprintBytecode {
-    private ConstPool constPool;
+    private BlueprintConstPool constPool;
     private List<Byte> code;
 
     /**
@@ -15,18 +16,26 @@ public class BlueprintBytecode {
      * @param className The name of the class which this bytecode will be applied to
      */
     public BlueprintBytecode(String className) {
-        this.constPool = new ConstPool(className);
+        this.constPool = new BlueprintConstPool(className);
         this.code = new ArrayList<>();
     }
 
     public Byte[] getBytecode() { return this.code.toArray(new Byte[] {}); }
+
+    public void addConstant(int index, ConstPool pool) {
+        this.constPool.addConstant(index, pool);
+    }
+
+    public void addConstants(ConstPool pool) {
+        this.constPool.addConstants(pool);
+    }
 
     /**
      * Appends bytecode to the end of the current bytecode
      * @param code
      */
     public void addBytecode(Byte... code) {
-        this.code.addAll(Arrays.asList(code));
+        this.addBytecode(0, code);
     }
 
     /**
@@ -35,7 +44,7 @@ public class BlueprintBytecode {
      * @param code
      */
     public void addBytecode(int index, Byte... code) {
-        this.code.addAll(index, Arrays.asList(code));
+        //TODO
     }
 
     /**
@@ -65,5 +74,25 @@ public class BlueprintBytecode {
 
             i++;
         }
+    }
+
+    private Byte[] updateConstPoolRef(Byte[] code) {
+        int opcode = code[0] & 0xFF;
+
+        int numberOfOperands = BlueprintOpcode.getNumberOfOperands(opcode);
+
+        if(BlueprintOpcode.referencesConstPool(opcode)) {
+            byte[] operands = new byte[numberOfOperands];
+
+            for(int i = 1; i < numberOfOperands + 1; i++) {
+                operands[i - 1] = code[i];
+            }
+
+            int oldIndex = IntegerUtils.fromBytes(operands);
+
+            //TODO
+        }
+
+        return code;
     }
 }
