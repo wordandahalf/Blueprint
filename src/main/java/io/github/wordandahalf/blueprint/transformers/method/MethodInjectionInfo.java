@@ -1,6 +1,6 @@
 package io.github.wordandahalf.blueprint.transformers.method;
 
-import io.github.wordandahalf.blueprint.annotation.At;
+import io.github.wordandahalf.blueprint.annotations.At;
 
 public class MethodInjectionInfo {
     private String sourceMethodName, targetMethodName;

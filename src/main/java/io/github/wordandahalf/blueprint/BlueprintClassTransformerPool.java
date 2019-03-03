@@ -9,7 +9,7 @@ public class BlueprintClassTransformerPool {
     private LinkedHashMap<Pair<String, String>, LinkedList<ClassTransformer>> pool
             = new LinkedHashMap<>();
 
-    public void add(String sourceClassName, String targetClassName, ClassTransformer transformer) {
+    public void add(String sourceClassName, String targetClassName, List<ClassTransformer> transformers) {
         LinkedList<ClassTransformer> list;
         Pair<String, String> key = Pair.of(sourceClassName, targetClassName);
         if(pool.containsKey(key))
@@ -17,8 +17,12 @@ public class BlueprintClassTransformerPool {
         else
             list = new LinkedList<>();
 
-        list.add(transformer);
+        list.addAll(transformers);
         pool.put(key, list);
+    }
+
+    public void add(String sourceClassName, String targetClassName, ClassTransformer... transformers) {
+        add(sourceClassName, targetClassName, Arrays.asList(transformers));
     }
 
     public void remove(String sourceClassName, String targetClassName, ClassTransformer transformer) {

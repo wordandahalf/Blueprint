@@ -6,7 +6,7 @@
 
     <groupId>io.github.wordandahalf</groupId>
     <artifactId>Blueprint</artifactId>
-    <version>0.0.1-DEV</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <licenses>
@@ -23,9 +23,24 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.24.1-GA</version>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-util</artifactId>
+            <version>7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <version>7.0</version>
         </dependency>
     </dependencies>
 
@@ -48,12 +63,6 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <archive>
-                        <manifestEntries>
-                            <Premain-Class>io.github.wordandahalf.blueprint.agent.BlueprintAgent</Premain-Class>
-                            <Main-Class>io.github.wordandahalf.blueprint.BlueprintTest</Main-Class>
-                        </manifestEntries>
-                    </archive>
                 </configuration>
                 <executions>
                     <execution>

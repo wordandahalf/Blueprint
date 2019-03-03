@@ -1,7 +1,7 @@
 package io.github.wordandahalf.blueprint.transformers;
 
-import javassist.CtClass;
+import org.objectweb.asm.tree.ClassNode;
 
 public abstract class ClassTransformer {
-    public abstract CtClass apply(CtClass sourceClass, CtClass targetClass) throws Exception;
+    public abstract ClassNode apply(final ClassNode sourceClass, final ClassNode targetClass) throws Exception;
 }

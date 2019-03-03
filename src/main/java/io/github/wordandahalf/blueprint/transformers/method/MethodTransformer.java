@@ -1,8 +1,8 @@
 package io.github.wordandahalf.blueprint.transformers.method;
 
 import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
-import javassist.CtClass;
-import javassist.CtMethod;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 public abstract class MethodTransformer extends ClassTransformer {
     private String sourceMethodName, targetMethodName;
@@ -12,20 +12,29 @@ public abstract class MethodTransformer extends ClassTransformer {
         this.targetMethodName = targetMethodName;
     }
 
-    @Override
-    public CtClass apply(CtClass sourceClass, CtClass targetClass) throws Exception {
-        CtMethod targetMethod = targetClass.getDeclaredMethod(this.targetMethodName);
+    public ClassNode apply(final ClassNode sourceClass, final ClassNode targetClass) throws Exception {
+        MethodNode sourceMethod = null;
+        MethodNode targetMethod = null;
 
-        CtMethod newMethod = this.apply(
-                sourceClass.getDeclaredMethod(this.sourceMethodName),
-                targetClass.getDeclaredMethod(this.targetMethodName)
-        );
+        for(MethodNode methodNode : sourceClass.methods) {
+            if(methodNode.name.equals(sourceMethodName)) {
+                sourceMethod = methodNode;
+            }
+        }
 
-        targetClass.removeMethod(targetMethod);
-        targetClass.addMethod(newMethod);
+        for(MethodNode methodNode : targetClass.methods) {
+            if(methodNode.name.equals(targetMethodName)) {
+                targetMethod = methodNode;
+            }
+        }
+
+        MethodNode modifiedMethod = apply(sourceMethod, targetMethod);
+
+        targetClass.methods.remove(targetMethod);
+        targetClass.methods.add(modifiedMethod);
 
         return targetClass;
     }
 
-    public abstract CtMethod apply(CtMethod sourceMethod, CtMethod targetMethod) throws Exception;
+    public abstract MethodNode apply(final MethodNode sourceMethod, final MethodNode targetMethod) throws Exception;
 }
