@@ -12,7 +12,7 @@ To include it as a dependency, either directly add the JAR or add the following 
 <dependency>
     <groupId>io.github.wordandahalf</groupId>
     <artifactId>Blueprint</artifactId>
-    <version>0.0.1-DEV</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -41,7 +41,7 @@ public class BlueprintTest {
         foo.getFoo();
     }
     
-    @Inject(target = "getFoo", at = @At(location = "TAIL"))
+    @Inject(target = "getFoo", at = @At(location = At.Location.TAIL))
     public void getFoo() {
         System.out.println("Hello, world!");
     }
