@@ -1,5 +1,6 @@
 package io.github.wordandahalf.blueprint.annotations;
 
+import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
 import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
 import io.github.wordandahalf.blueprint.transformers.method.MethodInjectionInfo;
 import io.github.wordandahalf.blueprint.transformers.method.MethodInjector;
@@ -9,6 +10,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 public class BlueprintAnnotationParser {
     /**
@@ -20,8 +22,7 @@ public class BlueprintAnnotationParser {
         List<ClassTransformer> classTransformers = new ArrayList<>();
 
         for(Method m : clazz.getDeclaredMethods()) {
-            //TODO: Use logging utility
-            System.out.println("Handling method " + m.getName());
+            BlueprintLogger.log(Level.FINER, BlueprintAnnotationParser.class, "Handling method " + m.getName());
             for(Annotation annotation : m.getAnnotations()) {
                 if(annotation instanceof Inject) {
                     Inject inject = (Inject) annotation;
@@ -30,14 +31,14 @@ public class BlueprintAnnotationParser {
                             new MethodInjectionInfo(m.getName(), inject.target(), inject.at()))
                     );
 
-                    System.out.println("Added inject");
+                    BlueprintLogger.log(Level.FINER, BlueprintAnnotationParser.class, "Added inject");
                 } else
                 if(annotation instanceof Overwrite) {
                     Overwrite overwrite = (Overwrite) annotation;
 
                     classTransformers.add(new MethodOverwriter(m.getName(), overwrite.target()));
 
-                    System.out.println("Added overwrite");
+                    BlueprintLogger.log(Level.FINER, BlueprintAnnotationParser.class, "Added overwrite");
                 }
             }
         }

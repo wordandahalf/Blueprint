@@ -4,44 +4,47 @@ import io.github.wordandahalf.blueprint.annotations.At;
 import io.github.wordandahalf.blueprint.annotations.Blueprint;
 import io.github.wordandahalf.blueprint.annotations.Inject;
 import io.github.wordandahalf.blueprint.annotations.Overwrite;
+import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
+
+import java.util.logging.Level;
 
 @Blueprint(target = "io.github.wordandahalf.blueprint.Foo")
 public class BlueprintTest {
     public static void main(String[] args) throws Exception {
-        System.out.println("Starting BlueprintTest...");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Starting BlueprintTest...");
 
-        System.out.println("Blueprints#add");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#add");
         Blueprints.add(BlueprintTest.class);
 
-        System.out.println("Blueprints#apply");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#apply");
         Blueprints.apply();
 
-        System.out.println("Verify:");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Verify:");
 
         Foo foo = new Foo();
 
-        System.out.println("Foo#sayBar(\"Good morning\")");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Foo#sayBar(\"Good morning\")");
         foo.sayBar("Good morning");
 
-        System.out.println("Foo#getFoo()");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Foo#getFoo()");
 
-        System.out.println(foo.getFoo());
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, foo.getFoo());
 
-        System.out.println("Done with tests");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Done with tests");
     }
 
     @Overwrite(target = "sayBar")
     public void sayBar(String greeting) {
-        System.out.println(greeting + ", overwrite!");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, greeting + ", overwrite!");
     }
 
     @Inject(target = "getFoo", at = @At(location = At.Location.HEAD))
     private void getFoo_head() {
-        System.out.println("Entering getFoo()");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Entering getFoo()");
     }
 
     @Inject(target = "getFoo", at = @At(location = At.Location.TAIL))
     private void getFoo_tail() {
-        System.out.println("Leaving getFoo()");
+        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Leaving getFoo()");
     }
 }
