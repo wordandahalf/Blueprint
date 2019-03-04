@@ -1,5 +1,6 @@
 package io.github.wordandahalf.blueprint.transformers.method;
 
+import io.github.wordandahalf.blueprint.utils.BytecodeUtils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;

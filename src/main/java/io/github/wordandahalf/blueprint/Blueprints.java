@@ -122,7 +122,7 @@ public class Blueprints {
 
         byte[] bytecode = writer.toByteArray();
 
-        Object result = method.invoke(ClassLoader.getSystemClassLoader(), node.name.replace("/", "."), bytecode, 0, bytecode.length);
+        Object result = method.invoke(classLoader, node.name.replace("/", "."), bytecode, 0, bytecode.length);
 
         return (Class) result;
     }
