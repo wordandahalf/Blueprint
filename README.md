@@ -36,6 +36,7 @@ package blueprintTest;
 public class BlueprintTest {
     public static void main(String[] args) throws Exception {
         Blueprints.add(BlueprintTest.class);
+        Blueprints.apply();
         
         Foo foo = new Foo();
         foo.getFoo();
