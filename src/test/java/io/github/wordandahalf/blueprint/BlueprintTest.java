@@ -35,16 +35,16 @@ public class BlueprintTest {
 
     @Overwrite(target = "sayBar")
     public void sayBar(String greeting) {
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, greeting + ", overwrite!");
+        System.out.println(greeting + ", overwrite!");
     }
 
     @Inject(target = "getFoo", at = @At(location = At.Location.HEAD))
     private void getFoo_head() {
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Entering getFoo()");
+        System.out.println("Entering getFoo()");
     }
 
     @Inject(target = "getFoo", at = @At(location = At.Location.TAIL))
     private void getFoo_tail() {
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Leaving getFoo()");
+        System.out.println("Leaving getFoo()");
     }
 }

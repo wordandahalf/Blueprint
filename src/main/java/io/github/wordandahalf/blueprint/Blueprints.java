@@ -13,7 +13,6 @@ import org.objectweb.asm.tree.ClassNode;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.logging.Level;
 
 public class Blueprints {
     public static boolean DEBUG = false;
@@ -55,7 +54,7 @@ public class Blueprints {
         for(Pair<String, String> classNames : transformerPool.getClassPairs()) {
             for(ClassTransformer transformer : transformerPool.getTransformerByPair(classNames)) {
 
-                BlueprintLogger.log(Level.FINE, Blueprint.class, "Handling transformer " + transformer.getClass().getSimpleName() + " with source class '" + classNames.left + "' and target class '" + classNames.right + "'");
+                BlueprintLogger.fine(Blueprint.class, "Handling transformer " + transformer.getClass().getSimpleName() + " with source class '" + classNames.left + "' and target class '" + classNames.right + "'");
 
                 ClassNode sourceNode = classNodePool.getClassNode(classNames.left);
                 ClassNode targetNode = classNodePool.getClassNode(classNames.right);
@@ -85,15 +84,15 @@ public class Blueprints {
     }
 
     private static void loadModifiedClasses() throws Exception {
-        BlueprintLogger.log(Level.FINE, Blueprint.class, "Reloading classes...");
+        BlueprintLogger.fine(Blueprint.class, "Reloading classes...");
 
         for(ClassNode node : classNodePool.getModifiedClassNodes()) {
-            BlueprintLogger.log(Level.FINE, Blueprint.class, "Redefining class '" + node.name);
+            BlueprintLogger.fine(Blueprint.class, "Redefining class '" + node.name);
 
             Class clazz = defineClass(node);
         }
 
-        BlueprintLogger.log(Level.FINE, Blueprint.class, "All " + classNodePool.getModifiedClassNodes().size() + " class(es) have been redefined.");
+        BlueprintLogger.fine(Blueprint.class, "All " + classNodePool.getModifiedClassNodes().size() + " class(es) have been redefined.");
     }
 
     private static Class defineClass(ClassNode node) throws Exception {

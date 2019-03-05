@@ -22,7 +22,7 @@ public class BlueprintAnnotationParser {
         List<ClassTransformer> classTransformers = new ArrayList<>();
 
         for(Method m : clazz.getDeclaredMethods()) {
-            BlueprintLogger.log(Level.FINER, BlueprintAnnotationParser.class, "Handling method " + m.getName());
+            BlueprintLogger.finer(BlueprintAnnotationParser.class, "Handling method " + m.getName());
             for(Annotation annotation : m.getAnnotations()) {
                 if(annotation instanceof Inject) {
                     Inject inject = (Inject) annotation;
@@ -31,14 +31,14 @@ public class BlueprintAnnotationParser {
                             new MethodInjectionInfo(m.getName(), inject.target(), inject.at()))
                     );
 
-                    BlueprintLogger.log(Level.FINER, BlueprintAnnotationParser.class, "Added inject");
+                    BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added inject");
                 } else
                 if(annotation instanceof Overwrite) {
                     Overwrite overwrite = (Overwrite) annotation;
 
                     classTransformers.add(new MethodOverwriter(m.getName(), overwrite.target()));
 
-                    BlueprintLogger.log(Level.FINER, BlueprintAnnotationParser.class, "Added overwrite");
+                    BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added overwrite");
                 }
             }
         }

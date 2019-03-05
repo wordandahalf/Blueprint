@@ -5,7 +5,6 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.logging.Level;
 
 public class BlueprintClassNodePool {
     private HashMap<String, ClassNode> modifiedClassNodes;
@@ -17,16 +16,14 @@ public class BlueprintClassNodePool {
     }
 
     public void addModifiedClassNode(ClassNode node) {
-        // TODO: Use logging utility
-        BlueprintLogger.log(Level.FINEST, BlueprintClassNodePool.class, "Adding modified ClassNode for '" + node.name + "'");
+        BlueprintLogger.finest(BlueprintClassNodePool.class, "Adding modified ClassNode for '" + node.name + "'");
 
         modifiedClassNodes.put(node.name.replace("/", "."), node);
         classNodes.put(node.name.replace("/", "."), node);
     }
 
     public void addClassNode(ClassNode node) {
-        // TODO: Use logging utility
-        BlueprintLogger.log(Level.FINEST, BlueprintClassNodePool.class, "Adding ClassNode for '" + node.name + "'");
+        BlueprintLogger.finest(BlueprintClassNodePool.class, "Adding ClassNode for '" + node.name + "'");
 
         classNodes.put(node.name.replace("/", "."), node);
     }
@@ -35,13 +32,12 @@ public class BlueprintClassNodePool {
 
     public ClassNode getClassNode(String className) {
         if(modifiedClassNodes.get(className) != null) {
-            // TODO: Use logging utility
-            BlueprintLogger.log(Level.FINEST, BlueprintClassNodePool.class, "Loading a modified ClassNode for '" + className + "'");
+            BlueprintLogger.finest(BlueprintClassNodePool.class, "Loading a modified ClassNode for '" + className + "'");
             return modifiedClassNodes.get(className);
         }
 
         if(classNodes.get(className) != null) {
-            BlueprintLogger.log(Level.FINEST, BlueprintClassNodePool.class, "Loading a cached ClassNode for '" + className + "'");
+            BlueprintLogger.finest(BlueprintClassNodePool.class, "Loading a cached ClassNode for '" + className + "'");
             return classNodes.get(className);
         }
 
