@@ -1,7 +1,7 @@
 package io.github.wordandahalf.blueprint.transformers.method;
 
+import io.github.wordandahalf.blueprint.classes.BlueprintClass;
 import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
-import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public abstract class MethodTransformer extends ClassTransformer {
@@ -12,17 +12,17 @@ public abstract class MethodTransformer extends ClassTransformer {
         this.targetMethodName = targetMethodName;
     }
 
-    public ClassNode apply(final ClassNode sourceClass, final ClassNode targetClass) throws Exception {
+    public BlueprintClass apply(final BlueprintClass sourceClass, final BlueprintClass targetClass) throws Exception {
         MethodNode sourceMethod = null;
         MethodNode targetMethod = null;
 
-        for(MethodNode methodNode : sourceClass.methods) {
+        for(MethodNode methodNode : sourceClass.getClassNode().methods) {
             if(methodNode.name.equals(sourceMethodName)) {
                 sourceMethod = methodNode;
             }
         }
 
-        for(MethodNode methodNode : targetClass.methods) {
+        for(MethodNode methodNode : targetClass.getClassNode().methods) {
             if(methodNode.name.equals(targetMethodName)) {
                 targetMethod = methodNode;
             }
@@ -30,8 +30,8 @@ public abstract class MethodTransformer extends ClassTransformer {
 
         MethodNode modifiedMethod = apply(sourceMethod, targetMethod);
 
-        targetClass.methods.remove(targetMethod);
-        targetClass.methods.add(modifiedMethod);
+        targetClass.getClassNode().methods.remove(targetMethod);
+        targetClass.getClassNode().methods.add(modifiedMethod);
 
         return targetClass;
     }

@@ -1,4 +1,4 @@
-package io.github.wordandahalf.blueprint;
+package io.github.wordandahalf.blueprint.classes;
 
 import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
 import io.github.wordandahalf.blueprint.utils.Pair;

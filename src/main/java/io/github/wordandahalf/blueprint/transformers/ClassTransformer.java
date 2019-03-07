@@ -1,7 +1,7 @@
 package io.github.wordandahalf.blueprint.transformers;
 
-import org.objectweb.asm.tree.ClassNode;
+import io.github.wordandahalf.blueprint.classes.BlueprintClass;
 
 public abstract class ClassTransformer {
-    public abstract ClassNode apply(final ClassNode sourceClass, final ClassNode targetClass) throws Exception;
+    public abstract BlueprintClass apply(final BlueprintClass sourceClass, final BlueprintClass targetClass) throws Exception;
 }

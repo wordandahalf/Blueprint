@@ -2,6 +2,9 @@ package io.github.wordandahalf.blueprint;
 
 import io.github.wordandahalf.blueprint.annotations.Blueprint;
 import io.github.wordandahalf.blueprint.annotations.BlueprintAnnotationParser;
+import io.github.wordandahalf.blueprint.classes.BlueprintClass;
+import io.github.wordandahalf.blueprint.classes.BlueprintClassNodePool;
+import io.github.wordandahalf.blueprint.classes.BlueprintClassTransformerPool;
 import io.github.wordandahalf.blueprint.loading.BlueprintClassReader;
 import io.github.wordandahalf.blueprint.loading.BlueprintClassWriter;
 import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
@@ -15,7 +18,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 public class Blueprints {
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
 
     private static BlueprintClassTransformerPool transformerPool = new BlueprintClassTransformerPool();
     private static BlueprintClassNodePool classNodePool = new BlueprintClassNodePool();
@@ -56,27 +59,23 @@ public class Blueprints {
 
                 BlueprintLogger.fine(Blueprint.class, "Handling transformer " + transformer.getClass().getSimpleName() + " with source class '" + classNames.left + "' and target class '" + classNames.right + "'");
 
-                ClassNode sourceNode = classNodePool.getClassNode(classNames.left);
-                ClassNode targetNode = classNodePool.getClassNode(classNames.right);
+                BlueprintClass sourceClass = classNodePool.getClass(classNames.left);
+                BlueprintClass targetClass = classNodePool.getClass(classNames.right);
 
-                if(!(sourceNode instanceof ClassNode)) {
-                    sourceNode = new ClassNode();
-                    BlueprintClassReader reader = new BlueprintClassReader(classNames.left, classLoader);
-                    reader.accept(sourceNode, 0);
+                if(sourceClass == null) {
+                    sourceClass = new BlueprintClass(classNames.left, classLoader);
 
-                    classNodePool.addClassNode(sourceNode);
+                    classNodePool.addClass(sourceClass);
                 }
 
-                if(!(targetNode instanceof ClassNode)) {
-                    targetNode = new ClassNode();
-                    BlueprintClassReader reader = new BlueprintClassReader(classNames.right, classLoader);
-                    reader.accept(targetNode, 0);
+                if(targetClass == null) {
+                    targetClass = new BlueprintClass(classNames.right, classLoader);
 
-                    classNodePool.addClassNode(targetNode);
+                    classNodePool.addClass(targetClass);
                 }
 
-                ClassNode modifiedNode = transformer.apply(sourceNode, targetNode);
-                classNodePool.addModifiedClassNode(modifiedNode);
+                BlueprintClass modifiedClass = transformer.apply(sourceClass, targetClass);
+                classNodePool.addModifiedClass(modifiedClass);
             }
         }
 
@@ -86,13 +85,13 @@ public class Blueprints {
     private static void loadModifiedClasses() throws Exception {
         BlueprintLogger.fine(Blueprint.class, "Reloading classes...");
 
-        for(ClassNode node : classNodePool.getModifiedClassNodes()) {
-            BlueprintLogger.fine(Blueprint.class, "Redefining class '" + node.name);
+        for(BlueprintClass blueprintClass : classNodePool.getModifiedClasses()) {
+            BlueprintLogger.fine(Blueprint.class, "Redefining class '" + blueprintClass.getClassName());
 
-            Class clazz = defineClass(node);
+            Class clazz = blueprintClass.defineClass();
         }
 
-        BlueprintLogger.fine(Blueprint.class, "All " + classNodePool.getModifiedClassNodes().size() + " class(es) have been redefined.");
+        BlueprintLogger.fine(Blueprint.class, "All " + classNodePool.getModifiedClasses().size() + " class(es) have been redefined.");
     }
 
     private static Class defineClass(ClassNode node) throws Exception {
