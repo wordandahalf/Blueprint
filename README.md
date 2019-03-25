@@ -1,5 +1,7 @@
 <p align="center"><img src="docs/blueprint_logo.png" alt="Blueprint Logo" height="100"></p>
 
+[![CodeFactor](https://www.codefactor.io/repository/github/wordandahalf/blueprint/badge)](https://www.codefactor.io/repository/github/wordandahalf/blueprint)
+
 ---
 
 **Blueprint** is a simple, annotation-driven library for modifying Java code at runtime
