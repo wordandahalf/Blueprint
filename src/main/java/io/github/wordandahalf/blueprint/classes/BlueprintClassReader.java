@@ -1,4 +1,4 @@
-package io.github.wordandahalf.blueprint.loading;
+package io.github.wordandahalf.blueprint.classes;
 
 import org.objectweb.asm.ClassReader;
 

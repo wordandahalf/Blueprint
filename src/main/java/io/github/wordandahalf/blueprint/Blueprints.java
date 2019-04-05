@@ -3,25 +3,18 @@ package io.github.wordandahalf.blueprint;
 import io.github.wordandahalf.blueprint.annotations.Blueprint;
 import io.github.wordandahalf.blueprint.annotations.BlueprintAnnotationParser;
 import io.github.wordandahalf.blueprint.classes.BlueprintClass;
-import io.github.wordandahalf.blueprint.classes.BlueprintClassNodePool;
-import io.github.wordandahalf.blueprint.classes.BlueprintClassTransformerPool;
-import io.github.wordandahalf.blueprint.loading.BlueprintClassReader;
-import io.github.wordandahalf.blueprint.loading.BlueprintClassWriter;
+import io.github.wordandahalf.blueprint.classes.BlueprintClassPool;
 import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
 import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
-import io.github.wordandahalf.blueprint.utils.Pair;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.tree.ClassNode;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.List;
 
 public class Blueprints {
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
 
-    private static BlueprintClassTransformerPool transformerPool = new BlueprintClassTransformerPool();
-    private static BlueprintClassNodePool classNodePool = new BlueprintClassNodePool();
+    private static BlueprintClassPool classPool = new BlueprintClassPool();
     private static ClassLoader classLoader = Blueprints.class.getClassLoader();
 
     public static void useClassLoader(ClassLoader loader) {
@@ -36,15 +29,40 @@ public class Blueprints {
      * @param clazz
      */
     public static void add(Class<?> clazz) {
-        Annotation blueprint = clazz.getAnnotation(Blueprint.class);
+        Annotation annotation = clazz.getAnnotation(Blueprint.class);
 
-        if(blueprint instanceof Blueprint) {
-            if(transformerPool.getTransformersBySource(clazz.getName()).size() == 0) {
-                List<ClassTransformer> parsedTransformers = BlueprintAnnotationParser.parse(clazz);
-                transformerPool.add(clazz.getName(), ((Blueprint) blueprint).target(), parsedTransformers);
-            } else {
-                System.err.println("The class " + clazz.getSimpleName() + " has already been loaded!");
+        if(annotation != null) {
+            Blueprint blueprint = (Blueprint) annotation;
+
+            List<ClassTransformer> parsedTransformers = BlueprintAnnotationParser.parse(clazz);
+            BlueprintClass targetClass = null;
+
+            if(classPool.getClass(clazz.getName()) == null) {
+                try {
+                    BlueprintClass sourceClass = new BlueprintClass(clazz.getName());
+
+                    classPool.addClass(sourceClass);
+                } catch (IOException e) {
+                    BlueprintLogger.warn(Blueprints.class, "There was an unexpected error when loading class '" + clazz.getName() + "'");
+                }
             }
+
+            if(classPool.getClass(blueprint.target()) == null) {
+                try {
+                    targetClass = new BlueprintClass(blueprint.target());
+
+                    classPool.addClass(targetClass);
+                } catch (IOException e) {
+                    BlueprintLogger.warn(Blueprints.class, "There was an unexpected error when loading class '" + clazz.getName() + "'");
+                }
+            } else {
+                targetClass = classPool.getClass(blueprint.target());
+            }
+
+            BlueprintLogger.finest(Blueprints.class, "Loaded " + parsedTransformers.size() + " transformer(s) for class '" + targetClass.getClassName() + "'");
+            targetClass.addTransformers(clazz.getName(), parsedTransformers.toArray(new ClassTransformer[] {}));
+
+            classPool.addModifiedClass(targetClass);
         } else {
             System.err.println("The class " + clazz.getSimpleName() + " is not decorated by a Blueprint annotation!");
         }
@@ -54,28 +72,15 @@ public class Blueprints {
      * Applies the loaded {@link io.github.wordandahalf.blueprint.transformers.ClassTransformer}s and loads the modified classes
      */
     public static void apply() throws Exception {
-        for(Pair<String, String> classNames : transformerPool.getClassPairs()) {
-            for(ClassTransformer transformer : transformerPool.getTransformerByPair(classNames)) {
+        for(BlueprintClass clazz : classPool.getModifiedClasses()) {
+            for(String sourceClassName : clazz.getTransformersSources()) {
+                for(ClassTransformer transformer : clazz.getTransformersBySource(sourceClassName)) {
+                    BlueprintLogger.fine(Blueprint.class, "Handling transformer " + transformer.getClass().getSimpleName() + " with source class '" + sourceClassName + "' and target class '" + clazz.getClassName() + "'");
 
-                BlueprintLogger.fine(Blueprint.class, "Handling transformer " + transformer.getClass().getSimpleName() + " with source class '" + classNames.left + "' and target class '" + classNames.right + "'");
+                    BlueprintClass modifiedClass = transformer.apply(classPool.getClass(sourceClassName), clazz);
 
-                BlueprintClass sourceClass = classNodePool.getClass(classNames.left);
-                BlueprintClass targetClass = classNodePool.getClass(classNames.right);
-
-                if(sourceClass == null) {
-                    sourceClass = new BlueprintClass(classNames.left, classLoader);
-
-                    classNodePool.addClass(sourceClass);
+                    classPool.addModifiedClass(modifiedClass);
                 }
-
-                if(targetClass == null) {
-                    targetClass = new BlueprintClass(classNames.right, classLoader);
-
-                    classNodePool.addClass(targetClass);
-                }
-
-                BlueprintClass modifiedClass = transformer.apply(sourceClass, targetClass);
-                classNodePool.addModifiedClass(modifiedClass);
             }
         }
 
@@ -83,30 +88,12 @@ public class Blueprints {
     }
 
     private static void loadModifiedClasses() throws Exception {
-        BlueprintLogger.fine(Blueprint.class, "Reloading classes...");
+        for(BlueprintClass clazz : classPool.getModifiedClasses()) {
+            BlueprintLogger.fine(Blueprint.class, "Redefining class '" + clazz.getClassName());
 
-        for(BlueprintClass blueprintClass : classNodePool.getModifiedClasses()) {
-            BlueprintLogger.fine(Blueprint.class, "Redefining class '" + blueprintClass.getClassName());
-
-            Class clazz = blueprintClass.defineClass();
+            Class definedClass = clazz.defineClass();
         }
 
-        BlueprintLogger.fine(Blueprint.class, "All " + classNodePool.getModifiedClasses().size() + " class(es) have been redefined.");
-    }
-
-    private static Class defineClass(ClassNode node) throws Exception {
-        BlueprintClassWriter writer = new BlueprintClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS, classLoader);
-        node.accept(writer);
-
-        Class clazz = ClassLoader.class;
-
-        Method method = clazz.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
-        method.setAccessible(true);
-
-        byte[] bytecode = writer.toByteArray();
-
-        Object result = method.invoke(classLoader, node.name.replace("/", "."), bytecode, 0, bytecode.length);
-
-        return (Class) result;
+        BlueprintLogger.fine(Blueprint.class, "All " + classPool.getModifiedClasses().size() + " class(es) have been redefined.");
     }
 }

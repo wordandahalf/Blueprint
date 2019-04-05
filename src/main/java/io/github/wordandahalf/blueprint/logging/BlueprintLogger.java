@@ -12,20 +12,10 @@ public class BlueprintLogger {
         }
     }
 
-    public static class BlueprintLogHandler extends StreamHandler {
+    public static class BlueprintLogHandler extends ConsoleHandler {
         public BlueprintLogHandler(OutputStream outputStream) {
-            this.setOutputStream(outputStream);
-        }
-
-        @Override
-        public void publish(LogRecord record) {
-            super.publish(record);
-            flush();
-        }
-
-        @Override
-        public void close() {
-            flush();
+            super();
+            super.setOutputStream(outputStream);
         }
     }
 
