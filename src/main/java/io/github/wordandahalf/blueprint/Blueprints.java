@@ -37,23 +37,25 @@ public class Blueprints {
             List<ClassTransformer> parsedTransformers = BlueprintAnnotationParser.parse(clazz);
             BlueprintClass targetClass = null;
 
+            // Load the source class if it is not already loaded
             if(classPool.getClass(clazz.getName()) == null) {
                 try {
-                    BlueprintClass sourceClass = new BlueprintClass(clazz.getName());
+                    BlueprintClass sourceClass = new BlueprintClass(clazz.getName(), classLoader);
 
                     classPool.addClass(sourceClass);
                 } catch (IOException e) {
-                    BlueprintLogger.warn(Blueprints.class, "There was an unexpected error when loading class '" + clazz.getName() + "'");
+                    BlueprintLogger.warn(Blueprints.class, "There was an unexpected error when source loading class '" + clazz.getName() + "': " + e.getMessage());
                 }
             }
 
+            // Load the target class if it is not already loaded
             if(classPool.getClass(blueprint.target()) == null) {
                 try {
-                    targetClass = new BlueprintClass(blueprint.target());
+                    targetClass = new BlueprintClass(blueprint.target(), classLoader);
 
                     classPool.addClass(targetClass);
                 } catch (IOException e) {
-                    BlueprintLogger.warn(Blueprints.class, "There was an unexpected error when loading class '" + clazz.getName() + "'");
+                    BlueprintLogger.warn(Blueprints.class, "There was an unexpected error when target loading class '" + blueprint.target() + "': " + e.getMessage());
                 }
             } else {
                 targetClass = classPool.getClass(blueprint.target());
