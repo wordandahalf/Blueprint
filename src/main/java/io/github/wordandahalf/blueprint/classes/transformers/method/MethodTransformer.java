@@ -1,7 +1,7 @@
-package io.github.wordandahalf.blueprint.transformers.method;
+package io.github.wordandahalf.blueprint.classes.transformers.method;
 
 import io.github.wordandahalf.blueprint.classes.BlueprintClass;
-import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
+import io.github.wordandahalf.blueprint.classes.transformers.ClassTransformer;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 

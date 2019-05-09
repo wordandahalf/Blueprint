@@ -1,11 +1,17 @@
 package io.github.wordandahalf.blueprint.classes;
 
-import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
+import io.github.wordandahalf.blueprint.Blueprints;
+import io.github.wordandahalf.blueprint.annotations.Blueprint;
+import io.github.wordandahalf.blueprint.classes.transformers.ClassTransformer;
+import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.util.CheckClassAdapter;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -91,6 +97,26 @@ public class BlueprintClass {
         method.setAccessible(true);
 
         byte[] bytecode = writer.toByteArray();
+
+        // TODO: Is this necessary?
+        if(Blueprints.DEBUG) {
+            BlueprintLogger.finest(BlueprintClass.class, "Verifying bytecode...");
+
+            try {
+                PrintWriter printWriter = new PrintWriter(new FileOutputStream(className + "-" + System.currentTimeMillis() +  ".txt", true));
+
+                BlueprintClassPrinter.print(this.classNode, printWriter);
+
+                printWriter.println("Class verification: ");
+
+                CheckClassAdapter.verify(new ClassReader(bytecode), true, printWriter);
+
+                printWriter.flush();
+                printWriter.close();
+            } catch(IOException e) {
+                BlueprintLogger.warn(BlueprintClass.class, e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
+        }
 
         Object result = method.invoke(this.classLoader, this.className, bytecode, 0, bytecode.length);
 

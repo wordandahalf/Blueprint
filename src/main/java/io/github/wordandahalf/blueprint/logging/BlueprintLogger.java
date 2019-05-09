@@ -3,6 +3,7 @@ package io.github.wordandahalf.blueprint.logging;
 import io.github.wordandahalf.blueprint.Blueprints;
 
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.logging.*;
 
 public class BlueprintLogger {

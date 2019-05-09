@@ -92,7 +92,8 @@ public class ASMTest {
 
 
         //write classNode
-        ClassWriter out=new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+
+        ClassWriter out = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
         classNode.accept(out);
 
         Class<?> clazz = BlueprintClassLoader.defineClass("io.github.wordandahalf.blueprint.Foo", out.toByteArray());

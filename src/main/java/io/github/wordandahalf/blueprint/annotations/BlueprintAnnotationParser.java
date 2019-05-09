@@ -1,16 +1,18 @@
 package io.github.wordandahalf.blueprint.annotations;
 
+import io.github.wordandahalf.blueprint.classes.transformers.reference.FieldReferenceTransformer;
+import io.github.wordandahalf.blueprint.classes.transformers.reference.MethodReferenceTransformer;
 import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
-import io.github.wordandahalf.blueprint.transformers.ClassTransformer;
-import io.github.wordandahalf.blueprint.transformers.method.MethodInjectionInfo;
-import io.github.wordandahalf.blueprint.transformers.method.MethodInjector;
-import io.github.wordandahalf.blueprint.transformers.method.MethodOverwriter;
+import io.github.wordandahalf.blueprint.classes.transformers.ClassTransformer;
+import io.github.wordandahalf.blueprint.classes.transformers.method.MethodInjectionInfo;
+import io.github.wordandahalf.blueprint.classes.transformers.method.MethodInjector;
+import io.github.wordandahalf.blueprint.classes.transformers.method.MethodOverwriter;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 public class BlueprintAnnotationParser {
     /**
@@ -18,7 +20,7 @@ public class BlueprintAnnotationParser {
      * @param clazz The class to scan
      * @return A list of the {@link ClassTransformer}s found in the class
      */
-    public static List<ClassTransformer> parse(Class<?> clazz) {
+    public static List<ClassTransformer> parse(Class<?> clazz, Blueprint blueprint) {
         List<ClassTransformer> classTransformers = new ArrayList<>();
 
         for(Method m : clazz.getDeclaredMethods()) {
@@ -39,6 +41,26 @@ public class BlueprintAnnotationParser {
                     classTransformers.add(new MethodOverwriter(m.getName(), overwrite.target()));
 
                     BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added overwrite");
+                } else
+                if(annotation instanceof Shadow) {
+                    Shadow shadow = (Shadow) annotation;
+
+                    classTransformers.add(new MethodReferenceTransformer(clazz.getName(), m.getName(), blueprint.target(), m.getName()));
+
+                    BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added shadow");
+                }
+            }
+        }
+
+        for(Field f : clazz.getDeclaredFields()) {
+            BlueprintLogger.finer(BlueprintAnnotationParser.class, "Handling field " + f.getName());
+            for(Annotation annotation : f.getAnnotations()) {
+                if(annotation instanceof Shadow) {
+                    Shadow shadow = (Shadow) annotation;
+
+                    classTransformers.add(new FieldReferenceTransformer(clazz.getName(), f.getName(), blueprint.target(), f.getName()));
+
+                    BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added shadow");
                 }
             }
         }

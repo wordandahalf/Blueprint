@@ -1,23 +1,34 @@
 package io.github.wordandahalf.blueprint;
 
-import io.github.wordandahalf.blueprint.annotations.At;
-import io.github.wordandahalf.blueprint.annotations.Blueprint;
-import io.github.wordandahalf.blueprint.annotations.Inject;
-import io.github.wordandahalf.blueprint.annotations.Overwrite;
+import io.github.wordandahalf.blueprint.annotations.*;
 import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
 
 import java.util.logging.Level;
 
 @Blueprint(target = "io.github.wordandahalf.blueprint.Foo")
-public class BlueprintTest {
-    public static void main(String[] args) throws Exception {
+public abstract class BlueprintTest {
+    @Shadow
+    abstract String getFoo();
+
+    @Shadow
+    private String fooText;
+
+    public static void main(String[] args) {
         BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Starting BlueprintTest...");
 
         BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#add");
         Blueprints.add(BlueprintTest.class);
 
         BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#apply");
-        Blueprints.apply();
+        try {
+            Blueprints.apply();
+        } catch(Exception e) {
+            BlueprintLogger.severe(BlueprintTest.class, e.getClass().getSimpleName() + ": " + e.getMessage());
+
+            for(StackTraceElement element : e.getStackTrace()) {
+                BlueprintLogger.severe(BlueprintTest.class, element.toString());
+            }
+        }
 
         BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Verify:");
 
@@ -36,6 +47,12 @@ public class BlueprintTest {
     @Overwrite(target = "sayBar")
     public void sayBar(String greeting) {
         System.out.println(greeting + ", overwrite!");
+
+        System.out.println("Setting fooText to 'Hello, foo injection!'");
+
+        this.fooText = "Hello, foo injection!";
+
+        System.out.println("getFoo(): " + this.getFoo());
     }
 
     @Inject(target = "getFoo", at = @At(location = At.Location.HEAD))

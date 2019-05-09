@@ -1,10 +1,8 @@
-package io.github.wordandahalf.blueprint.transformers.method;
+package io.github.wordandahalf.blueprint.classes.transformers.method;
 
-import io.github.wordandahalf.blueprint.utils.BytecodeUtils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.Iterator;
