@@ -4,33 +4,17 @@ import io.github.wordandahalf.blueprint.annotations.At;
 import io.github.wordandahalf.blueprint.annotations.Blueprint;
 import io.github.wordandahalf.blueprint.annotations.Inject;
 import io.github.wordandahalf.blueprint.annotations.Overwrite;
-import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
+import io.github.wordandahalf.blueprint.environment.BlueprintLogger;
 
-import java.util.logging.Level;
-
-@Blueprint(target = "io.github.wordandahalf.blueprint.Foo")
-public class BlueprintTest {
-    public static void main(String[] args) throws Exception {
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Starting BlueprintTest...");
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#add");
-        Blueprints.add(BlueprintTest.class);
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#apply");
-        Blueprints.apply();
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Verify:");
-
-        Foo foo = new Foo();
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Foo#sayBar(\"Good morning\")");
-        foo.sayBar("Good morning");
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Foo#getFoo()");
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, foo.getFoo());
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Done with tests");
+/**
+ * This is the builtin test of Blueprint features.
+ * Don't invoke any of the methods here during runtime--it is intended for testing purposes only.
+ */
+@Blueprint(target = Foo.class)
+final class BlueprintTest {
+    @Inject(target = "<init>", at = @At())
+    public void ctor() {
+        System.out.println("Hello, world foo!");
     }
 
     @Overwrite(target = "sayBar")
@@ -38,13 +22,19 @@ public class BlueprintTest {
         System.out.println(greeting + ", overwrite!");
     }
 
-    @Inject(target = "getFoo", at = @At(location = At.Location.HEAD))
-    private void getFoo_head() {
-        System.out.println("Entering getFoo()");
-    }
+    public static void main(String[] args) throws Exception {
+        BlueprintLogger.info(BlueprintTest.class, "Starting tests...");
 
-    @Inject(target = "getFoo", at = @At(location = At.Location.TAIL))
-    private void getFoo_tail() {
-        System.out.println("Leaving getFoo()");
+        try {
+            Blueprints.add(BlueprintTest.class);
+            Blueprints.apply();
+        } catch(Exception e) {
+            BlueprintLogger.severe(BlueprintTest.class, e.getClass().getSimpleName() + ": '" + e.getMessage() + "'");
+        }
+
+        Foo foo = new Foo();
+        foo.sayBar("Hello");
+
+        BlueprintLogger.info(BlueprintTest.class, "Done with tests!");
     }
 }

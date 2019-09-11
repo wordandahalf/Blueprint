@@ -1,6 +1,6 @@
 package io.github.wordandahalf.blueprint;
 
-import io.github.wordandahalf.blueprint.logging.BlueprintLogger;
+import io.github.wordandahalf.blueprint.environment.BlueprintLogger;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.Collection;

@@ -26,7 +26,4 @@ public class Foo {
     public void sayBar(String greeting) {
         System.out.println(greeting + ", bar!");
     }
-    public void sayBar_inject(String[] args) {
-        System.out.println(args[0]);
-    }
 }

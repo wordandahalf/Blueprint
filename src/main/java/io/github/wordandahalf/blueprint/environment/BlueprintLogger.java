@@ -1,4 +1,4 @@
-package io.github.wordandahalf.blueprint.logging;
+package io.github.wordandahalf.blueprint.environment;
 
 import io.github.wordandahalf.blueprint.Blueprints;
 
@@ -27,7 +27,7 @@ public class BlueprintLogger {
         BlueprintLogHandler handler = new BlueprintLogHandler(System.out);
         handler.setFormatter(new BlueprintLogFormatter());
 
-        if(Blueprints.DEBUG) {
+        if(Blueprints.DEBUG_MODE) {
             handler.setLevel(Level.ALL);
             logger.setLevel(Level.ALL);
         } else {
