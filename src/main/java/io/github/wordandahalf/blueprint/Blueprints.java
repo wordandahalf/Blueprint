@@ -12,19 +12,12 @@ import java.security.InvalidParameterException;
 public class Blueprints {
     public static final boolean DEBUG_MODE = true;
 
-    private static BlueprintClassTransformerPool transformerPool = new BlueprintClassTransformerPool();
-    private static BlueprintClassNodePool classNodePool = new BlueprintClassNodePool();
     private static ClassLoader classLoader = Blueprints.class.getClassLoader();
-
-    public static void useClassLoader(ClassLoader loader) {
-        classLoader = loader;
-    }
 
     /**
      * Adds the provided class as a Blueprint injection class.
      * The provided class must be decorated with a {@link io.github.wordandahalf.blueprint.annotations.Blueprint} annotation for any other annotations to be processed.
      * Adding the same injection class multiple times is ignored.
-     * To apply the loaded {@link io.github.wordandahalf.blueprint.transformers.ClassTransformer}s, see {@link #apply()}
      * @param clazz
      */
     public static void add(Class<?> clazz) {
@@ -40,10 +33,7 @@ public class Blueprints {
             throw new InvalidParameterException("The provided class does not have a Blueprint annotation");
         }
     }
-
-    /**
-     * Applies the loaded {@link io.github.wordandahalf.blueprint.transformers.ClassTransformer}s and loads the modified classes
-     */
+    
     public static void apply() {
 
     }
