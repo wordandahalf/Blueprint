@@ -14,11 +14,13 @@ public abstract class ReferenceTransformer extends ClassTransformer {
         this.info = info;
     }
 
+    public ReferenceInfo getReferenceInfo() { return this.info; }
+
     public BlueprintClass apply(final BlueprintClass sourceClass, final BlueprintClass targetClass) throws Exception {
-        // To prevent ConcurrentModificationException a traditional for-each loop cannot be used
+        // To prevent ConcurrentModificationException, a traditional for-each loop cannot be used
         ArrayList<MethodNode> methodsToAdd = new ArrayList<>();
 
-        for(Iterator<MethodNode> iterator = sourceClass.getClassNode().methods.iterator(); iterator.hasNext();) {
+        for(Iterator<MethodNode> iterator = targetClass.getClassNode().methods.iterator(); iterator.hasNext();) {
             MethodNode method = iterator.next();
 
             MethodNode modifiedMethod = this.apply(method, this.info);
@@ -27,9 +29,9 @@ public abstract class ReferenceTransformer extends ClassTransformer {
             methodsToAdd.add(modifiedMethod);
         }
 
-        sourceClass.getClassNode().methods.addAll(methodsToAdd);
+        targetClass.getClassNode().methods.addAll(methodsToAdd);
 
-        return sourceClass;
+        return targetClass;
     }
 
     public abstract MethodNode apply(final MethodNode targetMethod, final ReferenceInfo info);

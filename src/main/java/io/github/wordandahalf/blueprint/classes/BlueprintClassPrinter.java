@@ -32,7 +32,6 @@ public class BlueprintClassPrinter {
         final List<MethodNode> methods = classNode.methods;
 
         for(MethodNode m : methods) {
-
             final List<LocalVariableNode> localVariableNodes = m.localVariables;
             printWriter.println("Local variables:");
             for(LocalVariableNode variableNode : localVariableNodes) {
@@ -40,7 +39,7 @@ public class BlueprintClassPrinter {
             }
 
             InsnList inList = m.instructions;
-            printWriter.println(m.name);
+            printWriter.println('\n' + m.name);
             for(int i = 0; i< inList.size(); i++){
                 printWriter.print("(" + inList.get(i).getClass().getSimpleName() + ")" + insnToString(inList.get(i)));
             }

@@ -45,9 +45,18 @@ public class BlueprintAnnotationParser {
                 if(annotation instanceof Shadow) {
                     Shadow shadow = (Shadow) annotation;
 
-                    classTransformers.add(new MethodReferenceTransformer(clazz.getName(), m.getName(), blueprint.target(), m.getName()));
+                    String target = m.getName();
 
-                    BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added shadow");
+                    if(!shadow.target().equals(""))
+                        target = shadow.target();
+
+                    MethodReferenceTransformer transformer = new MethodReferenceTransformer(blueprint.target(), target, clazz.getName(), m.getName());
+
+                    classTransformers.add(transformer);
+
+                    BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added shadow with source class '"
+                            + transformer.getReferenceInfo().getSourceClass() + "' and target class '"
+                            + transformer.getReferenceInfo().getTargetClass() + "'");
                 }
             }
         }
@@ -58,9 +67,18 @@ public class BlueprintAnnotationParser {
                 if(annotation instanceof Shadow) {
                     Shadow shadow = (Shadow) annotation;
 
-                    classTransformers.add(new FieldReferenceTransformer(clazz.getName(), f.getName(), blueprint.target(), f.getName()));
+                    String target = f.getName();
 
-                    BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added shadow");
+                    if(!shadow.target().equals(""))
+                        target = shadow.target();
+
+                    FieldReferenceTransformer transformer = new FieldReferenceTransformer(blueprint.target(), target, clazz.getName(), f.getName());
+
+                    classTransformers.add(transformer);
+
+                    BlueprintLogger.finer(BlueprintAnnotationParser.class, "Added shadow with source class '"
+                            + transformer.getReferenceInfo().getSourceClass() + "' and target class '"
+                            + transformer.getReferenceInfo().getTargetClass() + "'");
                 }
             }
         }

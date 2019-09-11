@@ -14,34 +14,36 @@ public abstract class BlueprintTest {
     private String fooText;
 
     public static void main(String[] args) {
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Starting BlueprintTest...");
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#add");
-        Blueprints.add(BlueprintTest.class);
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#apply");
         try {
+            BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Starting BlueprintTest...");
+
+            BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#add");
+            Blueprints.add(BlueprintTest.class);
+
+            BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Blueprints#apply");
+
             Blueprints.apply();
-        } catch(Exception e) {
+
+            BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Verify:");
+
+            Foo foo = new Foo();
+
+            BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Foo#sayBar(\"Good morning\")");
+            foo.sayBar("Good morning");
+
+            BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Foo#getFoo()");
+
+            BlueprintLogger.log(Level.INFO, BlueprintTest.class, foo.getFoo());
+
+            BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Done with tests");
+        }
+        catch (Exception e) {
             BlueprintLogger.severe(BlueprintTest.class, e.getClass().getSimpleName() + ": " + e.getMessage());
 
-            for(StackTraceElement element : e.getStackTrace()) {
+            for (StackTraceElement element : e.getStackTrace()) {
                 BlueprintLogger.severe(BlueprintTest.class, element.toString());
             }
         }
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Verify:");
-
-        Foo foo = new Foo();
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Foo#sayBar(\"Good morning\")");
-        foo.sayBar("Good morning");
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Foo#getFoo()");
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, foo.getFoo());
-
-        BlueprintLogger.log(Level.INFO, BlueprintTest.class, "Done with tests");
     }
 
     @Overwrite(target = "sayBar")

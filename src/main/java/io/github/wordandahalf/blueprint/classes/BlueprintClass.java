@@ -107,7 +107,7 @@ public class BlueprintClass {
 
                 BlueprintClassPrinter.print(this.classNode, printWriter);
 
-                printWriter.println("Class verification: ");
+                printWriter.println("\n\n\nClass verification: ");
 
                 CheckClassAdapter.verify(new ClassReader(bytecode), true, printWriter);
 

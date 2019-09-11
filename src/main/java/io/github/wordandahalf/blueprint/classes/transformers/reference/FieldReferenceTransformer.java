@@ -35,7 +35,19 @@ public class FieldReferenceTransformer extends ReferenceTransformer {
                 FieldInsnNode fieldInsnNode = (FieldInsnNode) insnNode;
 
                 if(fieldInsnNode.name.equals(this.info.getTargetName())) {
-                    fieldInsnNode.owner = this.info.getTargetClass();
+                    BlueprintLogger.fine(FieldReferenceTransformer.class, "Old name=" + this.info.getTargetName());
+                    BlueprintLogger.fine(FieldReferenceTransformer.class, "Old owner=" + this.info.getTargetClass());
+                    BlueprintLogger.fine(FieldReferenceTransformer.class, "New name=" + this.info.getSourceName());
+                    BlueprintLogger.fine(FieldReferenceTransformer.class, "New owner=" + this.info.getSourceClass());
+
+                    BlueprintLogger.fine(FieldReferenceTransformer.class, "Remapping " + fieldInsnNode.getOpcode() + ":");
+                    BlueprintLogger.fine(FieldReferenceTransformer.class, "(" + fieldInsnNode.desc + ") " + fieldInsnNode.owner + "/" + fieldInsnNode.name);
+
+                    fieldInsnNode.name = this.info.getSourceName();
+                    fieldInsnNode.owner = this.info.getSourceClass();
+
+                    BlueprintLogger.fine(FieldReferenceTransformer.class, "New:");
+                    BlueprintLogger.fine(FieldReferenceTransformer.class, "(" + fieldInsnNode.desc + ") " + fieldInsnNode.owner + "/" + fieldInsnNode.name);
                 }
             }
         }
